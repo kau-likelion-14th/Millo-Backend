@@ -56,6 +56,9 @@ public enum ErrorCode implements BaseCode {
     TODO_DATE_REQUIRED(HttpStatus.BAD_REQUEST, "TODO_4007", "일반 투두는 날짜 입력이 필수입니다."),
     TODO_ROUTINE_TO_NORMAL_NOT_SUPPORTED(HttpStatus.BAD_REQUEST, "TODO_4008", "루틴 투두는 일반 투두로 변경할 수 없습니다."),
     TODO_DATE_NOT_FOUND(HttpStatus.NOT_FOUND, "TODO_4042", "해당 날짜의 투두 기록을 찾을 수 없습니다."),
+    TODO_ROUTINE_TYPE_CHANGE_NOT_SUPPORTED(HttpStatus.BAD_REQUEST, "TODO_4009", "투두 타입은 변경할 수 없습니다. 루틴은 루틴끼리, 일반은 일반끼리만 수정할 수 있습니다."),
+
+    STAT_WEEK_NOT_FOUND(HttpStatus.INTERNAL_SERVER_ERROR, "STATISTIC_5001", "해당 요일의 통계 데이터를 찾을 수 없습니다."),
     ;
 
     private final HttpStatus httpStatus;
