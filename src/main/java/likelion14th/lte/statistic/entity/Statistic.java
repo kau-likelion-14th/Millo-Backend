@@ -8,8 +8,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Comparator;
+import java.util.List;
 
 @Entity
 @Getter
@@ -44,7 +44,6 @@ public class Statistic extends BaseEntity {
         }
     }
 
-    // streak 증가/초기화 로직 (도메인 로직은 엔티티에!)
     public void increaseStreakIfSuccess(boolean success) {
         if (success) {
             this.streak += 1;
@@ -58,7 +57,12 @@ public class Statistic extends BaseEntity {
     }
 
     // 가장 투두를 많이 완료한 요일 찾기
+    // 완료 기록이 하나도 없으면(모든 count가 0) null 반환
     public WeekEnum getMostTodoWeek() {
+        boolean hasAnyRecord = statWeeks.stream().anyMatch(w -> w.getCount() > 0);
+        if (!hasAnyRecord) {
+            return null;
+        }
         return statWeeks.stream()
                 .max(Comparator.comparingInt(StatWeek::getCount))
                 .map(StatWeek::getWeek)

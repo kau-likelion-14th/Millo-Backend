@@ -77,7 +77,7 @@ public class StatisticService {
             StatWeek statWeek = statistic.getStatWeeks().stream()
                     .filter(w -> w.getWeek().toDayOfWeek() == yesterday.getDayOfWeek())
                     .findFirst()
-                    .orElseThrow(() -> new GeneralException(ErrorCode.INTERNAL_SERVER_ERROR));
+                    .orElseThrow(() -> new GeneralException(ErrorCode.STAT_WEEK_NOT_FOUND));
             statWeek.increaseCount();
         }
 
