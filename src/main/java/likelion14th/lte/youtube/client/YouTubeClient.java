@@ -43,7 +43,7 @@ public class YouTubeClient {
 
     public JsonNode getVideoRaw(String videoId) {
         String url = UriComponentsBuilder
-                .fromUriString(apiBase = "/videos")
+                .fromUriString(apiBase + "/videos")
                 .queryParam("part", "snippet, contentDetails")
                 .queryParam("id", videoId)
                 .queryParam("key", apikey)

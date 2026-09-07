@@ -98,6 +98,7 @@ public class YouTubeService {
                 .user(user)
                 .songId(songId)
                 .title(snippet.path("title").asText(""))
+                .artist(snippet.path("channelTitle").asText(""))
                 .imageUrl(extractThumbnail(snippet))
                 .durationMs(parseDurationMs(duration))
                 .build();
@@ -107,13 +108,13 @@ public class YouTubeService {
 
     private JsonNode getFirstVideo(String videoId) {
         JsonNode root = youTubeClient.getVideoRaw(videoId);
-        JsonNode item = root.path("item");
+        JsonNode items = root.path("items");
 
-        if (!item.isArray() || item.size() == 0) {
+        if (!items.isArray() || items.size() == 0) {
             throw new GeneralException(ErrorCode.SONG_NOT_FOUND);
         }
 
-        return item.get(0);
+        return items.get(0);
     }
 
     public List<SavedSongResponse> mySavedSongs() {
