@@ -47,7 +47,7 @@ public class JwtProvider {
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .subject(String.valueOf(userId))
                 .issuedAt(now)
-                .expiresAt(now.plusMillis(accessExpMs))
+                .expiresAt(now.plusMillis(refreshExpMs))
                 .claim("type", "REFRESH")
                 .build();
 

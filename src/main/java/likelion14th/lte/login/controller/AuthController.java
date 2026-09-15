@@ -68,7 +68,7 @@ public class AuthController {
 
         String newAccessToken = authService.reissueAccessToken(refreshToken);
 
-        return ApiResponse.onSuccess(SuccessCode.USER_LOGIN_SUCCESS, newAccessToken);
+        return ApiResponse.onSuccess(SuccessCode.USER_REISSUE_SUCCESS, newAccessToken);
     }
 
     @PostMapping("/logout")
@@ -85,7 +85,7 @@ public class AuthController {
                 deleteRefreshTokenCookie().toString()
         );
 
-        return ApiResponse.onSuccess(SuccessCode.USER_LOGIN_SUCCESS, null);
+        return ApiResponse.onSuccess(SuccessCode.USER_LOGOUT_SUCCESS, null);
     }
 
     @DeleteMapping("/withdraw")
@@ -94,12 +94,15 @@ public class AuthController {
             @AuthenticationPrincipal Jwt jwt,
             HttpServletResponse httpResponse
     ){
+        Long userId = Long.valueOf(jwt.getSubject());
+        authService.withdraw(userId);
+
         httpResponse.addHeader(
                 HttpHeaders.SET_COOKIE,
                 deleteRefreshTokenCookie().toString()
         );
 
-        return ApiResponse.onSuccess(SuccessCode.USER_LOGIN_SUCCESS, null);
+        return ApiResponse.onSuccess(SuccessCode.USER_DELETE_SUCCESS, null);
     }
 
     public ResponseCookie createRefreshTokenCookie(String refreshToken){
