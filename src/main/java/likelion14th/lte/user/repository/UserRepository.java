@@ -18,6 +18,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findById(Long id);
     Page<User> findByUsernameContainingIgnoreCase(String nickname, Pageable pageable);
     Optional<User> findByUserTag(String userTag);
+    Optional<User> findByProviderId(String providerId);
 
     @Query("SELECT u FROM User u " +
             "WHERE u.id != :userId " +
