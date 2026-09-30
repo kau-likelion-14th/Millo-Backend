@@ -98,7 +98,7 @@ public class UserProfileService {
                     ?originalFilename.substring(originalFilename.lastIndexOf("."))
                     :originalFilename;
             S3Dto result =
-                    s3Utils.uploadBytes(resizedImage.bytes(),baseName = ".png", resizedImage.contentType());
+                    s3Utils.uploadBytes(resizedImage.bytes(),baseName + ".png", resizedImage.contentType());
             if (user.getS3ImageKey()!=null){
                 s3Utils.deleteFile(user.getS3ImageKey());
             }
