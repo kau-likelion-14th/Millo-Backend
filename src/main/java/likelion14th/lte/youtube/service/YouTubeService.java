@@ -13,9 +13,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ext.javatime.DateTimeParseException;
 
 import java.time.Duration;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,24 +25,9 @@ import java.util.List;
 @Transactional
 public class YouTubeService {
 
-    private static final String DUMMY_LOGIN_ID = "dummy";
-    private static final String DUMMY_USERNAME = "dummy";
-    private static final String DUMMY_USER_TAG = "dummy";
-
     private final YouTubeClient youTubeClient;
     private final SavedSongRepository savedSongRepository;
     private final UserRepository userRepository;
-
-    private User getDummyUser() {
-        return userRepository.findByUsername(DUMMY_USERNAME)
-                .orElseGet(() -> userRepository.save(
-                        User.builder()
-                                .username(DUMMY_USERNAME)
-                                .userTag(DUMMY_USER_TAG)
-                                .introduction("더미 데이터")
-                                .build()
-                ));
-    }
 
     @Transactional(readOnly = true)
     public List<YouTubeSongItemResponse> searchSongs(String query, int limit) {
@@ -76,13 +61,13 @@ public class YouTubeService {
         return result;
     }
 
-    public SavedSongResponse saveSong(String songId) {
+    public SavedSongResponse saveSong(Long userId, String songId) {
         if (songId == null || songId.isBlank()) {
             throw new GeneralException(ErrorCode.BAD_REQUEST);
         }
 
-        //TODO:로그인 기능 구현 후 수정예정
-        User user = getDummyUser();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new GeneralException(ErrorCode.USER_NOT_FOUND));
 
         if (savedSongRepository.existsByUserAndSongId(user, songId)) {
             throw new GeneralException((ErrorCode.SONG_ALREADY_SAVED));
@@ -117,8 +102,10 @@ public class YouTubeService {
         return items.get(0);
     }
 
-    public List<SavedSongResponse> mySavedSongs() {
-        User user = getDummyUser();
+    @Transactional(readOnly = true)
+    public List<SavedSongResponse> mySavedSongs(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new GeneralException(ErrorCode.USER_NOT_FOUND));
 
         return savedSongRepository.findAllByUserOrderBySavedAtDesc(user)
                 .stream()
@@ -126,8 +113,9 @@ public class YouTubeService {
                 .toList();
     }
 
-    public void deleteSavedSong(String songId) {
-        User user = getDummyUser();
+    public void deleteSavedSong(Long userId, String songId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new GeneralException(ErrorCode.USER_NOT_FOUND));
 
         SavedSong savedSong = savedSongRepository.findByUserAndSongId(user, songId)
                 .orElseThrow(() -> new GeneralException(ErrorCode.SONG_NOT_FOUND));
@@ -141,12 +129,12 @@ public class YouTubeService {
 
 
         if (imageUrl == null || imageUrl.isBlank()) {
-            imageUrl = snippet.path("thumbnail").path("medium")
+            imageUrl = snippet.path("thumbnails").path("medium")
                     .path("url").asText(null);
         }
 
         if (imageUrl == null || imageUrl.isBlank()) {
-            imageUrl = snippet.path("thumbnail").path("default")
+            imageUrl = snippet.path("thumbnails").path("default")
                     .path("url").asText(null);
         }
 
@@ -167,4 +155,3 @@ public class YouTubeService {
         }
     }
 }
-
