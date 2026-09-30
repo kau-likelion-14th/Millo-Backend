@@ -6,13 +6,18 @@ import likelion14th.lte.user.dto.request.CreateTestUserRequest;
 import likelion14th.lte.user.dto.response.UserProfileResponse;
 import likelion14th.lte.user.entity.User;
 import likelion14th.lte.user.repository.UserRepository;
+import likelion14th.lte.utils.Image.ImageUtil;
+import likelion14th.lte.utils.S3.S3Dto;
+import likelion14th.lte.utils.S3.S3Utils;
+import likelion14th.lte.utils.exception.UtilException;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import org.springframework.web.multipart.MultipartFile;
 @Service
 @RequiredArgsConstructor(access = AccessLevel.PROTECTED)
+
 public class UserProfileService {
 
     // [Q5. Service 안에서 new UserRepository() 로 객체를 직접 생성하지 않고,
@@ -25,6 +30,8 @@ public class UserProfileService {
     // DI를 사용하면 테스트 시 가짜 Repository를 대신 주입해서
     // DB 없이도 Service 로직만 독립적으로 테스트할 수 있습니다.
     private final UserRepository userRepository;
+    private final S3Utils s3Utils;
+    private final ImageUtil imageUtil;
 
     // [Q6. (코딩 문제) 만약 클래스 위의 @RequiredArgsConstructor를 지운다면,
     // 우리가 직접 작성해야 할 의존성 주입용 자바 '생성자' 코드는 어떤 모습일까요? 아래에 직접 코딩해 보세요.]
@@ -78,5 +85,66 @@ public class UserProfileService {
                 .orElseThrow(()-> new GeneralException(ErrorCode.USER_NOT_FOUND));
         return UserProfileResponse.from(user);
     }
+    @Transactional
+    public UserProfileResponse putProfileimage(Long userId, MultipartFile file){
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new GeneralException(ErrorCode.USER_NOT_FOUND));
+        try {
+            imageUtil.validateImage(file);
+            ImageUtil.ResizedImage resizedImage=
+                    imageUtil.resizeProfileToPngBytes(file, 256);
+            String originalFilename = file.getOriginalFilename();
+            String baseName = originalFilename.contains(".")
+                    ?originalFilename.substring(originalFilename.lastIndexOf("."))
+                    :originalFilename;
+            S3Dto result =
+                    s3Utils.uploadBytes(resizedImage.bytes(),baseName + ".png", resizedImage.contentType());
+            if (user.getS3ImageKey()!=null){
+                s3Utils.deleteFile(user.getS3ImageKey());
+            }
+            user.fixUserProfile(result.getUrl(),result.getKey());
+            return UserProfileResponse.from(user);
+        }catch (UtilException e){
+            throw GeneralException.of(mapToErrorCode(e.getReason()));
+        }
+    }
 
+    @Transactional
+    public UserProfileResponse deleteProfileImage(Long userId){
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new GeneralException(ErrorCode.USER_NOT_FOUND));
+
+        if (user.getS3ImageKey() != null){
+            try {
+                s3Utils.deleteFile(user.getS3ImageKey());
+            } catch (UtilException e){
+                throw GeneralException.of(mapToErrorCode(e.getReason()));
+            }
+        }
+
+        user.fixUserProfile(null, null);
+        return UserProfileResponse.from(user);
+    }
+
+    @Transactional
+    public UserProfileResponse updateIntroduction(Long userId, String introduce){
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new GeneralException(ErrorCode.USER_NOT_FOUND));
+
+        user.updateIntroduction(introduce);
+        return UserProfileResponse.from(user);
+    }
+
+    private ErrorCode mapToErrorCode(UtilException.Reason reason) {
+        return switch (reason) {
+            case FILE_EMPTY -> ErrorCode.IMAGE_FILE_EMPTY;
+            case FILE_TOO_LARGE -> ErrorCode.IMAGE_TOO_LARGE;
+            case TYPE_NOT_ALLOWED -> ErrorCode.IMAGE_TYPE_NOT_ALLOWED;
+
+            case IMAGE_PROCESS_FAILED -> ErrorCode.IMAGE_PROCESS_FAILED;
+
+            case S3_UPLOAD_FAILED -> ErrorCode.S3_UPLOAD_FAILED;
+            case S3_DELETE_FAILED -> ErrorCode.S3_DELETE_FAILED;
+        };
+    }
 }

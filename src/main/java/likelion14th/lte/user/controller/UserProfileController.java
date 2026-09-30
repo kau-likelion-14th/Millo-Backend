@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import likelion14th.lte.global.api.ApiResponse;
 import likelion14th.lte.global.api.SuccessCode;
 import likelion14th.lte.user.dto.request.CreateTestUserRequest;
+import likelion14th.lte.user.dto.request.UserIntroRequest;
 import likelion14th.lte.user.dto.response.UserProfileResponse;
 import likelion14th.lte.user.entity.User;
 import likelion14th.lte.user.service.UserProfileService;
@@ -14,7 +15,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.http.MediaType;
 @RestController
 @Slf4j
 @RequestMapping("/api/profile")
@@ -58,5 +60,47 @@ public class UserProfileController {
     ){
         UserProfileResponse response = userProfileService.creatTestUser(createTestUserRequest);
         return ApiResponse.onSuccess(SuccessCode.CREATED, response);
+    }
+
+    @PutMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "유저 프로필 추가 및 수정", description = "유저 프로필 이미지를 추가하거나 수정합니다.")
+    public ApiResponse<UserProfileResponse> putUserProfile(
+            @AuthenticationPrincipal Jwt jwt,
+            @RequestParam("image") MultipartFile file
+    ){
+        Long userId = Long.valueOf(jwt.getSubject());
+
+        UserProfileResponse response = userProfileService.putProfileimage(userId,file);
+        return ApiResponse.onSuccess(SuccessCode.PROFILE_PUT_SUCCESS, response);
+    }
+
+    @DeleteMapping
+    @Operation(summary = "프로필 이미지 삭제", description = "로그인한 본인의 프로필 이미지를 삭제합니다.")
+    public ApiResponse<UserProfileResponse> deleteProfileImage(
+            @AuthenticationPrincipal Jwt jwt
+    ){
+        Long userId = Long.valueOf(jwt.getSubject());
+        UserProfileResponse response = userProfileService.deleteProfileImage(userId);
+        return ApiResponse.onSuccess(SuccessCode.PROFILE_DELETE_SUCCESS, response);
+    }
+
+    @GetMapping("/touser")
+    @Operation(summary = "다른 유저 프로필 조회", description = "toUserId에 해당하는 다른 유저의 프로필을 조회합니다.")
+    public ApiResponse<UserProfileResponse> getOtherUserProfile(
+            @RequestParam Long toUserId
+    ){
+        UserProfileResponse response = userProfileService.getUserProfile(toUserId);
+        return ApiResponse.onSuccess(SuccessCode.USER_INFO_GET_SUCCESS, response);
+    }
+
+    @PutMapping("/intro")
+    @Operation(summary = "한줄 소개 수정", description = "로그인한 본인의 한줄 소개를 수정합니다.")
+    public ApiResponse<UserProfileResponse> updateIntroduction(
+            @AuthenticationPrincipal Jwt jwt,
+            @RequestBody UserIntroRequest request
+    ){
+        Long userId = Long.valueOf(jwt.getSubject());
+        UserProfileResponse response = userProfileService.updateIntroduction(userId, request.getIntroduce());
+        return ApiResponse.onSuccess(SuccessCode.USER_PROFILE_UPDATE_SUCCESS, response);
     }
 }

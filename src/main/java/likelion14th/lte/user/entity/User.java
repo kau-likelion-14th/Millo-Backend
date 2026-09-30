@@ -60,14 +60,20 @@ public class User extends BaseEntity {
     private RefreshToken refreshToken;
 
     @Builder(access = AccessLevel.PUBLIC)
-    private User(String username, String providerId, String userTag, String introduction) {
+    private User(String username, String providerId, String userTag, String introduction,String s3IamgeKey, String profileImage) {
         this.providerId = providerId;
         this.username = username;
         this.userTag = userTag;
         this.introduction = introduction;
+        this.s3ImageKey = s3IamgeKey;
+        this.profileImage = profileImage;
         this.followers = new ArrayList<>();
         this.followings = new ArrayList<>();
         this.statistic = Statistic.create();
+    }
+    public void fixUserProfile(String s3ImageUrl,String s3ImageKey){
+        this.s3ImageKey=s3ImageKey;
+        this.profileImage=s3ImageUrl;
     }
 
     public void updateIntroduction(String introduction) {
