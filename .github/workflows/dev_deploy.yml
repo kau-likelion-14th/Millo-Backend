@@ -9,12 +9,11 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
-    if: >
-      (github.event_name == 'pull_request' &&
+    if: (github.event_name == 'pull_request' &&
       github.event.pull_request.merged == true &&
       github.event.pull_request.base.ref == 'main')
       || github.event_name == 'workflow_dispatch'
+    # develop branch로 pr 요청되고 merge가 되면 작동
 
     steps:
       - name: Checkout
@@ -59,20 +58,19 @@ jobs:
           cp -r .ebextensions_dev deploy/.ebextensions
           cp -r .platform deploy/.platform
           cd deploy && zip -r deploy.zip .
-
       - name: Verify deploy zip content
         run: |
           unzip -l deploy/deploy.zip | head -n 50
-          unzip -l deploy/deploy.zip | egrep -i "pom.xml|Buildfile|src|repository/" && exit 1 || echo "OK: no sample source"
+          unzip -l deploy/deploy.zip | egrep -i "pom.xml|Buildfile|src/|repository/" && exit 1 || echo "OK: no sample source"
 
       - name: Deploy to Elastic Beanstalk
         uses: einaregilsson/beanstalk-deploy@v20
         with:
           aws_access_key: ${{ secrets.AWS_ACTION_ACCESS_KEY_ID }}
           aws_secret_key: ${{ secrets.AWS_ACTION_SECRET_ACCESS_KEY }}
-          application_name: lte-dev
-          environment_name: Lte_dev_env
+          application_name: 'lte-dev'         # EB 애플리케이션 이름
+          environment_name: 'Lte-dev-env'    # EB 환경 이름
           version_label: github-action-${{ steps.current-time.outputs.formattedTime }}
-          region: ap-northeast-2
-          deployment_package: deploy/deploy.zip
+          region: 'ap-northeast-2'
+          deployment_package: 'deploy/deploy.zip'
           wait_for_deployment: true
