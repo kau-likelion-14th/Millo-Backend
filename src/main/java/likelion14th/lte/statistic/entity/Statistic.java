@@ -66,6 +66,6 @@ public class Statistic extends BaseEntity {
         return statWeeks.stream()
                 .max(Comparator.comparingInt(StatWeek::getCount))
                 .map(StatWeek::getWeek)
-                .orElse(null);
+                .orElse(WeekEnum.MON);
     }
 }
