@@ -3,7 +3,6 @@ package likelion14th.lte.todo.schedule;
 import jakarta.transaction.Transactional;
 import likelion14th.lte.todo.entity.Todo;
 import likelion14th.lte.todo.generator.RoutineTodoDateGenerator;
-import likelion14th.lte.todo.repository.TodoDateRepository;
 import likelion14th.lte.todo.repository.TodoRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -11,20 +10,22 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 
 @Component
 @RequiredArgsConstructor(access = AccessLevel.PROTECTED)
 public class RoutineTodoScheduler {
 
+    private static final ZoneId KST = ZoneId.of("Asia/Seoul");
+
     private final RoutineTodoDateGenerator routineTodoDateGenerator;
     private final TodoRepository todoRepository;
 
-
-    @Scheduled(cron = "0 0 3 * * *")
+    @Scheduled(cron = "0 0 3 * * *", zone = "Asia/Seoul")
     @Transactional
     public void generateRoutineTodoDate() {
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(KST);
 
         List<Todo> routineTodos = todoRepository.findAllByRoutineEnabledTrue();
         for (Todo todo : routineTodos) {
