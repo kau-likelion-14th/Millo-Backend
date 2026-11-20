@@ -13,7 +13,7 @@ public class StatisticSchedule {
 
     private final StatisticService statisticService;
 
-    @Scheduled(cron = "0 10 0 * * *")
+    @Scheduled(cron = "0 10 0 * * *", zone = "Asia/Seoul")
     public void updateAllStatisticsSchedule() {
         log.info("전체 유저 통계 갱신 스케줄러 시작");
         statisticService.updateAllStatistics();

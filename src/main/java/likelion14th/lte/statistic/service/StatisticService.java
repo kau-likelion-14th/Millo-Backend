@@ -17,10 +17,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 
 @Service
 @RequiredArgsConstructor(access = AccessLevel.PROTECTED)
 public class StatisticService {
+
+    private static final ZoneId KST = ZoneId.of("Asia/Seoul");
 
     private final UserRepository userRepository;
     private final TodoDateRepository todoDateRepository;
@@ -65,7 +68,10 @@ public class StatisticService {
     private void updateStatisticInternal(User user) {
         Long userId = user.getId();
         Statistic statistic = user.getStatistic();
-        LocalDate yesterday = LocalDate.now().minusDays(1);
+        if (statistic == null) {
+            return;
+        }
+        LocalDate yesterday = LocalDate.now(KST).minusDays(1);
 
         boolean hasCompleted = todoDateRepository.existsByTodo_User_IdAndDateAndCompleted(userId, yesterday, true);
         boolean hasIncomplete = todoDateRepository.existsByTodo_User_IdAndDateAndCompleted(userId, yesterday, false);
