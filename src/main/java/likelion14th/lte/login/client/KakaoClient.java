@@ -10,10 +10,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import tools.jackson.databind.JsonNode;
 
-import javax.print.attribute.standard.Media;
-
 @Component
-
 public class KakaoClient {
 
     private final RestTemplate restTemplate = new RestTemplate();
@@ -49,17 +46,17 @@ public class KakaoClient {
         try {
             JsonNode response = restTemplate.postForObject(tokenUri, request, JsonNode.class);
 
-            if (response == null || !response.has("access_token")){
+            if (response == null || !response.has("access_token")) {
                 throw new GeneralException(ErrorCode.KAKAO_API_FAILED);
             }
 
             return response.get("access_token").asText();
-        }catch (GeneralException e) {
+        } catch (GeneralException e) {
             throw e;
-        }catch (Exception e){
+        } catch (Exception e) {
+            System.out.println("[KAKAO TOKEN ERROR] redirectUri=" + redirectUri + " / " + e.getMessage());
             throw new GeneralException(ErrorCode.KAKAO_API_FAILED);
         }
-
     }
 
     public JsonNode getUserInfo(String accessToken) {
@@ -77,17 +74,16 @@ public class KakaoClient {
             );
 
             JsonNode body = response.getBody();
-            if (!response.getStatusCode().is2xxSuccessful()||body == null){
+            if (!response.getStatusCode().is2xxSuccessful() || body == null) {
                 throw new GeneralException(ErrorCode.KAKAO_API_FAILED);
-
             }
 
             return body;
-        }catch (GeneralException e){
+        } catch (GeneralException e) {
             throw e;
-        }catch (Exception e){
+        } catch (Exception e) {
+            System.out.println("[KAKAO USERINFO ERROR] " + e.getMessage());
             throw new GeneralException(ErrorCode.KAKAO_API_FAILED);
         }
     }
-
 }
